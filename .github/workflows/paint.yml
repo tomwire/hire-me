@@ -1,0 +1,36 @@
+name: paint-contributions
+
+on:
+  schedule:
+    - cron: "23 7 * * *"        # daily, 07:23 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: paint
+  cancel-in-progress: true
+
+jobs:
+  paint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Paint
+        env:
+          # ---- set these as repo Variables (Settings -> Secrets and variables
+          #      -> Actions -> Variables). No code edits needed. ----
+          ART_NAME:      ${{ vars.ART_NAME  || 'Thomas Wire' }}
+          ART_EMAIL:     ${{ vars.ART_EMAIL || 'tom@thomaswire.com' }}   # MUST be verified on your account
+          ART_TEXT:      ${{ vars.ART_TEXT  || 'HIRE TOM' }}
+          ART_INTENSITY: ${{ vars.ART_INTENSITY || '100' }}
+          ART_END_GAP:   ${{ vars.ART_END_GAP || '' }}   # empty -> auto-centered
+          # ART_SIGN unset -> the runner has no GPG key, so CI commits are
+          # unsigned (signatures never show on the contribution graph anyway).
+        run: python paint.py
+      - name: Push
+        run: git push --force origin main
